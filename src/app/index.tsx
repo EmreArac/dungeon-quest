@@ -1,98 +1,95 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Cinzel_700Bold, useFonts } from '@expo-google-fonts/cinzel';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+  Alert,
+  BackHandler,
+  Button,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { playClick, startMusic } from '../audio';
+import GameBackground from '../components/GameBackground';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+const logo = require('../../assets/images/logo.jpg');
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+export default function Screen1() {
+  const router = useRouter();
+  const [started, setStarted] = useState(false);
+  const [fontsLoaded] = useFonts({ Cinzel_700Bold });
+
+  const exitGame = () => {
+    playClick();
+    if (Platform.OS === 'android') {
+      BackHandler.exitApp();
+    } else {
+      Alert.alert('Exit', 'Close the app by swiping it away.');
+    }
+  };
+
+  const handleNewGame = async () => {
+    playClick();
+    await startMusic();
+    setStarted(true);
+  };
+
+  if (!fontsLoaded) {
+    return null;
   }
-  if (Device.isDevice) {
+
+  if (!started) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <GameBackground>
+        <View style={styles.logoBox}>
+          <Image source={logo} style={styles.logo} />
+        </View>
+        <Text style={styles.gameTitle}>Dungeon Quest</Text>
+        <Button title="New Game" color="#e0b84a" onPress={handleNewGame} />
+        <Button title="Exit" color="#e0b84a" onPress={exitGame} />
+      </GameBackground>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <GameBackground>
+      <Text style={styles.story}>
+        The kingdom of Eldoria lies in darkness. The Shadow Lord has stolen the
+        Crystal of Dawn, and you are the last hope. You stand at a crossroads at
+        the edge of the Whispering Forest. A dark path leads into the trees, and
+        a faint light glows from an old hermit's hut.
+      </Text>
+      <Button
+        title="Enter the dark forest"
+        color="#e0b84a"
+        onPress={() => { playClick(); router.push('/screen2'); }}
+      />
+      <Button
+        title="Visit the hermit's hut"
+        color="#e0b84a"
+        onPress={() => { playClick(); router.push('/screen3'); }}
+      />
+    </GameBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+  logoBox: { width: 220, height: 260, overflow: 'hidden', borderRadius: 16 },
+  logo: { width: 220, height: 394, marginTop: -67 },
+  gameTitle: {
+    color: '#fff',
+    fontSize: 34,
+    marginVertical: 12,
+    fontFamily: 'Cinzel_700Bold',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
+  story: {
+    color: '#fff',
+    fontSize: 16,
     textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    lineHeight: 24,
+    marginBottom: 12,
+    fontFamily: 'Cinzel_700Bold',
   },
 });
